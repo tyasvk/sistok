@@ -3,10 +3,11 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
+// Gunakan Object untuk transactions karena menggunakan Paginate
 const props = defineProps({
     transactions: {
-        type: Array,
-        default: () => []
+        type: Object,
+        default: () => ({ data: [], links: [] })
     },
     filters: {
         type: Object,
@@ -53,6 +54,7 @@ const formatDate = (dateString) => {
         <div class="p-4 md:p-8 print:p-0 print:block">
             <div class="bg-transparent md:bg-white md:rounded-[32px] md:border md:border-gray-100 md:shadow-sm md:p-8 print:shadow-none print:border-none print:rounded-none print:bg-white">
                 
+                <!-- Header & Filter -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 mb-6 md:mb-8 print:hidden bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 md:bg-transparent md:p-0 md:shadow-none md:border-none">
                     <div class="w-full lg:w-auto">
                         <h3 class="text-lg md:text-xl font-bold text-gray-900">Log Data Masuk & Keluar</h3>
@@ -79,9 +81,11 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
+                <!-- Tampilan Mobile (Kartu) -->
                 <div class="block md:hidden print:hidden">
-                    <div v-if="transactions.length > 0" class="flex flex-col gap-4 pb-10">
-                        <div v-for="log in transactions" :key="'mob-'+log.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                    <div v-if="transactions.data.length > 0" class="flex flex-col gap-4 pb-10">
+                        <!-- Menggunakan transactions.data -->
+                        <div v-for="log in transactions.data" :key="'mob-'+log.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
                             
                             <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="log.type === 'masuk' ? 'bg-blue-500' : 'bg-red-500'"></div>
 
@@ -107,20 +111,27 @@ const formatDate = (dateString) => {
                                 </div>
                                 <div class="flex justify-between items-start py-1">
                                     <span class="text-gray-500 font-medium pt-0.5">Tujuan/Ket</span>
-                                    <span class="font-bold text-gray-800 text-right max-w-[60%] leading-tight">{{ log.keterangan || '-' }}</span>
+                                    <span class="font-bold text-gray-800 text-right max-w-[65%] leading-relaxed whitespace-normal break-words">{{ log.keterangan || '-' }}</span>
                                 </div>
                             </div>
 
                             <div class="mt-4 pt-3 border-t border-gray-100 pl-2">
-                                <div v-if="log.type === 'masuk' || log.is_verified" class="text-center py-2 bg-green-50 text-green-600 text-xs font-bold rounded-lg border border-green-100">
-                                    {{ log.type === 'masuk' ? 'SELESAI' : 'DISETUJUI' }}
+                                <div v-if="log.type === 'masuk'" class="flex items-center justify-center py-2.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                    STOK DITAMBAHKAN
                                 </div>
                                 <div v-else>
-                                    <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="flex items-center justify-center w-full py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-colors">
-                                        Tinjau Permintaan
-                                    </Link>
-                                    <div v-else class="text-center py-2 bg-orange-50 text-orange-600 text-xs font-bold rounded-lg border border-orange-100">
-                                        MENUNGGU VERIFIKASI
+                                    <div v-if="log.is_verified" class="flex items-center justify-center py-2.5 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-100">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        DISETUJUI
+                                    </div>
+                                    <div v-else>
+                                        <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="flex items-center justify-center w-full py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-colors">
+                                            Tinjau Permintaan <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </Link>
+                                        <div v-else class="text-center py-2.5 bg-orange-50 text-orange-600 text-xs font-bold rounded-lg border border-orange-100">
+                                            MENUNGGU VERIFIKASI
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -132,6 +143,7 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
+                <!-- Tampilan Desktop & Print (Tabel) -->
                 <div class="hidden md:block print:block w-full">
                     
                     <div class="hidden print:block text-center mb-8 border-b-2 border-black pb-4">
@@ -140,55 +152,69 @@ const formatDate = (dateString) => {
                         <p class="text-sm mt-1">Bulan: {{ filterBulan ? bulanList.find(b => b.value === filterBulan).text : 'Semua Bulan' }} | Tahun: {{ filterTahun }}</p>
                     </div>
 
-                    <div class="rounded-xl border border-gray-100 overflow-hidden print:border-none print:overflow-visible">
-                        <table class="w-full text-left print:border-collapse">
+                    <div class="rounded-xl border border-gray-100 overflow-x-auto print:border-none print:overflow-visible">
+                        <table class="w-full text-left print:border-collapse min-w-[800px]">
                             <thead>
                                 <tr class="text-[11px] lg:text-xs font-bold text-gray-400 uppercase bg-gray-50 print:bg-transparent print:text-black print:border-black print:border-b-2">
                                     <th class="py-3.5 px-4 print:border print:border-black print:p-2">Waktu Transaksi</th>
                                     <th class="py-3.5 px-4 print:border print:border-black print:p-2">Nama Barang</th>
-                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Tipe</th>
-                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Jumlah</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2 text-center">Tipe</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2 text-center">Jumlah</th>
                                     <th class="py-3.5 px-4 print:border print:border-black print:p-2">Pemohon</th>
                                     <th class="py-3.5 px-4 print:border print:border-black print:p-2">Tujuan / Ket</th>
-                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Status / Aksi</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2 text-right">Status / Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="text-sm">
-                                <tr v-for="log in transactions" :key="log.id" class="border-t border-gray-100 hover:bg-gray-50 transition-colors print:border-black print:break-inside-avoid">
+                                <!-- Menggunakan transactions.data -->
+                                <tr v-for="log in transactions.data" :key="log.id" class="border-t border-gray-100 hover:bg-gray-50 transition-colors print:border-black print:break-inside-avoid">
                                     <td class="py-4 px-4 text-gray-500 whitespace-nowrap print:border print:border-black print:p-2 print:text-black">
                                         {{ formatDate(log.created_at) }}
                                     </td>
-                                    <td class="py-4 px-4 font-bold text-gray-900 print:border print:border-black print:p-2">
+                                    <td class="py-4 px-4 font-bold text-gray-900 print:border print:border-black print:p-2 break-words">
                                         {{ log.product ? log.product.name : 'Barang Dihapus' }}
                                     </td>
-                                    <td class="py-4 px-4 print:border print:border-black print:p-2">
-                                        <span v-if="log.type === 'masuk'" class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-blue-100 print:border-none">MASUK</span>
-                                        <span v-else class="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-red-100 print:border-none">KELUAR</span>
+                                    <td class="py-4 px-4 text-center print:border print:border-black print:p-2">
+                                        <span v-if="log.type === 'masuk'" class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md border border-blue-100 print:bg-transparent print:text-black print:p-0 print:border-none">MASUK</span>
+                                        <span v-else class="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-100 print:bg-transparent print:text-black print:p-0 print:border-none">KELUAR</span>
                                     </td>
-                                    <td class="py-4 px-4 font-black text-gray-900 whitespace-nowrap print:border print:border-black print:p-2">
+                                    <td class="py-4 px-4 text-center font-black text-gray-900 whitespace-nowrap print:border print:border-black print:p-2">
                                         {{ log.quantity }} <span class="text-[10px] text-gray-400 font-normal uppercase print:hidden">{{ log.product?.unit || '' }}</span>
                                     </td>
-                                    <td class="py-4 px-4 font-bold text-gray-800 print:border print:border-black print:p-2">
+                                    <td class="py-4 px-4 font-bold text-gray-800 print:border print:border-black print:p-2 break-words">
                                         {{ log.user?.name || 'Sistem' }}
                                     </td>
-                                    <td class="py-4 px-4 text-gray-600 print:border print:border-black print:p-2 max-w-[200px] truncate print:max-w-none print:whitespace-normal" :title="log.keterangan">
+                                    <td class="py-4 px-4 text-gray-700 whitespace-normal break-words leading-relaxed print:border print:border-black print:p-2 max-w-[250px]">
                                         {{ log.keterangan || '-' }}
                                     </td>
-                                    <td class="py-4 px-4 print:border print:border-black print:p-2">
-                                        <span v-if="log.type === 'masuk' || log.is_verified" class="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-green-100 print:border-none">
-                                            {{ log.type === 'masuk' ? '-' : 'DISETUJUI' }}
-                                        </span>
-                                        <div v-else>
-                                            <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-all print:hidden">
-                                                Tinjau <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                            </Link>
-                                            <span v-else class="inline-flex items-center px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-orange-100 print:border-none">
-                                                MENUNGGU
+                                    <td class="py-4 px-4 text-right print:border print:border-black print:p-2 print:text-center">
+                                        
+                                        <!-- BARANG MASUK -->
+                                        <div v-if="log.type === 'masuk'">
+                                            <span class="inline-flex items-center px-2.5 py-1.5 bg-blue-50 border border-blue-100 text-blue-700 text-[10px] font-bold rounded-md whitespace-nowrap print:bg-transparent print:border-none print:text-black print:p-0">
+                                                <svg class="w-3.5 h-3.5 mr-1 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                STOK DITAMBAHKAN
                                             </span>
+                                        </div>
+                                        
+                                        <!-- BARANG KELUAR -->
+                                        <div v-else>
+                                            <span v-if="log.is_verified" class="inline-flex items-center px-2.5 py-1.5 bg-green-50 border border-green-100 text-green-700 text-[10px] font-bold rounded-md whitespace-nowrap print:bg-transparent print:border-none print:text-black print:p-0">
+                                                <svg class="w-3.5 h-3.5 mr-1 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                DISETUJUI
+                                            </span>
+                                            <div v-else>
+                                                <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-all whitespace-nowrap print:hidden">
+                                                    Tinjau <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                                </Link>
+                                                <span v-else class="inline-flex items-center px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-md border border-orange-100 whitespace-nowrap print:bg-transparent print:border-none print:text-black print:p-0">
+                                                    MENUNGGU
+                                                </span>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
-                                <tr v-if="transactions.length === 0">
+                                <tr v-if="transactions.data.length === 0">
                                     <td colspan="7" class="py-12 text-center text-gray-400 font-medium print:border print:border-black">
                                         Tidak ada riwayat transaksi pada periode ini.
                                     </td>
@@ -203,6 +229,23 @@ const formatDate = (dateString) => {
                             <p class="font-bold underline uppercase">Kepala Lapas</p>
                         </div>
                     </div>
+
+                    <!-- PAGINATION (Tombol Navigasi Halaman) -->
+                    <div v-if="transactions.links && transactions.links.length > 3" class="flex justify-center items-center mt-8 pb-4 print:hidden">
+                        <div class="flex flex-wrap gap-1 shadow-sm rounded-lg overflow-hidden border border-gray-200">
+                            <template v-for="(link, index) in transactions.links" :key="index">
+                                <!-- Link non-aktif -->
+                                <div v-if="link.url === null" class="px-3.5 py-2 text-sm font-medium text-gray-400 bg-gray-50 border-r border-gray-200 last:border-0" v-html="link.label"></div>
+                                <!-- Link Aktif -->
+                                <Link v-else :href="link.url" 
+                                      class="px-3.5 py-2 text-sm font-semibold border-r border-gray-200 last:border-0 transition-colors" 
+                                      :class="link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-blue-50 hover:text-blue-600'" 
+                                      v-html="link.label">
+                                </Link>
+                            </template>
+                        </div>
+                    </div>
+
                 </div>
 
             </div>

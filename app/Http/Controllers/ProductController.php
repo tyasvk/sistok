@@ -134,11 +134,12 @@ class ProductController extends Controller
     }
 
 // PADA FUNGSI history()
-    public function history(Request $request)
+   public function history(Request $request)
     {
-        // UBAH WITH: tambahkan 'user' agar nama pemohon terbawa ke Vue
-        $query = Transaction::with(['product', 'user'])->latest();
+        // Ambil data riwayat beserta nama barangnya, urutkan dari yang terbaru
+        $query = Transaction::with('product')->latest();
 
+        // Fitur Filter Bulan & Tahun
         if ($request->filled('bulan')) {
             $query->whereMonth('created_at', $request->bulan);
         }
@@ -147,7 +148,8 @@ class ProductController extends Controller
         }
 
         return Inertia::render('Riwayat', [
-            'transactions' => $query->get(),
+            // [KODE YANG DIUBAH] Ganti ->get() menjadi ->paginate(10)->withQueryString()
+            'transactions' => $query->paginate(10)->withQueryString(), 
             'filters'      => $request->only(['bulan', 'tahun'])
         ]);
     }
