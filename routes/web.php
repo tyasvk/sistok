@@ -5,6 +5,7 @@ use App\Http\Controllers\ProductController; // INI WAJIB DITAMBAHKAN
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\UserController; // Pastikan ini di-import di atas
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Tambahkan baris ini untuk Manajemen User
+    Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
 
     // Route Halaman Barang Masuk
     Route::get('/barang-masuk', function () {

@@ -1,192 +1,111 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 
-const showingNavigationDropdown = ref(false);
+// State untuk membuka/tutup sidebar di layar mobile
+const isSidebarOpen = ref(false);
+const page = usePage();
+
+// Menentukan judul header otomatis berdasarkan rute yang aktif
+const pageTitle = computed(() => {
+    if (route().current('dashboard')) return 'Pantau Stok';
+    if (route().current('riwayat.index')) return 'Riwayat Transaksi';
+    if (route().current('pimpinan.verifikasi')) return 'Verifikasi Barang';
+    if (route().current('profile.edit')) return 'Edit Profil';
+    return 'Dashboard';
+});
 </script>
 
 <template>
-    <div class="flex h-screen bg-gray-100">
+    <div class="flex h-screen bg-[#F8FAFC] font-sans text-gray-900 overflow-hidden relative">
         
-        <aside class="hidden w-64 flex-col border-r border-gray-200 bg-white sm:flex">
-            <div class="flex h-16 shrink-0 items-center justify-center border-b border-gray-100 px-4">
-                <Link :href="route('dashboard')">
-                    <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
-                </Link>
+        <div v-if="isSidebarOpen" @click="isSidebarOpen = false" class="fixed inset-0 bg-black/50 z-20 md:hidden transition-opacity"></div>
+
+        <aside :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed md:relative z-30 w-64 h-full bg-[#0F172A] text-white flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out md:translate-x-0">
+            <div class="h-16 md:h-20 flex items-center justify-between px-6 border-b border-gray-800">
+                <h1 class="text-xl font-extrabold">SISTOK <span class="text-blue-500">LAPAS</span></h1>
+                <button @click="isSidebarOpen = false" class="md:hidden text-gray-400 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
 
-            <nav class="flex-1 space-y-2 overflow-y-auto px-4 py-4">
-                <NavLink
-                    :href="route('dashboard')"
-                    :active="route().current('dashboard')"
-                    class="flex w-full items-center rounded-md px-2 py-2"
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <Link 
+                    :href="route('dashboard')" 
+                    :class="route().current('dashboard') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                    class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                    Dashboard
-                </NavLink>
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Pantau Stok
+                </Link>
 
-                <NavLink
-                    :href="route('riwayat.index')"
-                    :active="route().current('riwayat.index')"
-                    class="flex w-full items-center rounded-md px-2 py-2"
+                <Link 
+                    :href="route('riwayat.index')" 
+                    :class="route().current('riwayat.index') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                    class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
                 >
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Riwayat Transaksi
-                </NavLink>
+                </Link>
 
-                <NavLink
-                    :href="route('profile.edit')"
-                    :active="route().current('profile.edit')"
-                    class="flex w-full items-center rounded-md px-2 py-2"
+<Link 
+                    v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan"
+                    :href="route('users.index')" 
+                    :class="route().current('users.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                    class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                    Edit Profil
-                </NavLink>
-            </nav>
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Manajemen User
+                </Link>
 
-            <div class="border-t border-gray-100 p-4 space-y-1">
-                <div class="mb-3 px-2 text-sm font-bold text-gray-800 truncate">
-                    Halo, {{ $page.props.auth.user.name }}
-                </div>
-                
-                <Link
-                    :href="route('profile.edit')"
-                    class="flex w-full items-center rounded-md px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+                <Link 
+                    :href="route('profile.edit')" 
+                    :class="route().current('profile.edit') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                    class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
                 >
-                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                     Edit Profil
                 </Link>
-                
-                <Link
-                    :href="route('logout')"
-                    method="post"
-                    as="button"
-                    class="flex w-full items-center rounded-md px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition"
-                >
-                    <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+            </nav>
+
+            <div class="p-4 border-t border-gray-800">
+                <Link :href="route('logout')" method="post" as="button" class="flex items-center w-full px-4 py-3 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                     Keluar
                 </Link>
             </div>
         </aside>
 
-        <div class="flex flex-1 flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col h-screen overflow-hidden w-full">
             
-            <header class="flex h-16 shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center sm:hidden">
-                    <button
-                        @click="showingNavigationDropdown = !showingNavigationDropdown"
-                        class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                    >
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path
-                                :class="{ hidden: showingNavigationDropdown, 'inline-flex': !showingNavigationDropdown }"
-                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"
-                            />
-                            <path
-                                :class="{ hidden: !showingNavigationDropdown, 'inline-flex': showingNavigationDropdown }"
-                                stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+            <header class="h-16 md:h-20 bg-white flex items-center justify-between px-4 md:px-8 border-b border-gray-200 shrink-0">
+                <div class="flex items-center">
+                    <button @click="isSidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-800">{{ pageTitle }}</h2> 
                 </div>
 
-                <div class="hidden sm:block"></div>
-
-                <div class="flex items-center">
-                    <div class="relative ms-3">
-                        <Dropdown align="right" width="48">
-                            <template #trigger>
-                                <span class="inline-flex rounded-md">
-                                    <button
-                                        type="button"
-                                        class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                    >
-                                        {{ $page.props.auth.user.name }}
-
-                                        <svg
-                                            class="-me-0.5 ms-2 h-4 w-4"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                        >
-                                            <path
-                                                fill-rule="evenodd"
-                                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                clip-rule="evenodd"
-                                            />
-                                        </svg>
-                                    </button>
-                                </span>
-                            </template>
-
-                            <template #content>
-                                <DropdownLink :href="route('profile.edit')">
-                                    Edit Profil
-                                </DropdownLink>
-                                <DropdownLink :href="route('logout')" method="post" as="button">
-                                    Keluar
-                                </DropdownLink>
-                            </template>
-                        </Dropdown>
+                <div class="flex items-center space-x-3">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-sm font-bold text-gray-900">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">
+                            {{ $page.props.auth.user.is_pimpinan ? 'Pimpinan Lapas' : 'Admin Lapas' }}
+                        </p>
                     </div>
+                    
+                    <Link :href="route('profile.edit')" class="relative group cursor-pointer" title="Edit Profil">
+                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold group-hover:ring-4 group-hover:ring-blue-100 transition-all">
+                            {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
+                        </div>
+                    </Link>
                 </div>
             </header>
 
-            <div
-                :class="{ block: showingNavigationDropdown, hidden: !showingNavigationDropdown }"
-                class="sm:hidden border-b border-gray-100 bg-white absolute w-full z-10"
-            >
-                <div class="space-y-1 pb-3 pt-2">
-                    <ResponsiveNavLink
-                        :href="route('dashboard')"
-                        :active="route().current('dashboard')"
-                    >
-                        Dashboard
-                    </ResponsiveNavLink>
-                    
-                    <ResponsiveNavLink
-                        :href="route('riwayat.index')"
-                        :active="route().current('riwayat.index')"
-                    >
-                        Riwayat Transaksi
-                    </ResponsiveNavLink>
-                </div>
-
-                <div class="border-t border-gray-200 pb-1 pt-4">
-                    <div class="px-4">
-                        <div class="text-base font-medium text-gray-800">
-                            {{ $page.props.auth.user.name }}
-                        </div>
-                        <div class="text-sm font-medium text-gray-500">
-                            {{ $page.props.auth.user.email }}
-                        </div>
-                    </div>
-
-                    <div class="mt-3 space-y-1">
-                        <ResponsiveNavLink :href="route('profile.edit')" :active="route().current('profile.edit')">
-                            Edit Profil
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink :href="route('logout')" method="post" as="button">
-                            Keluar
-                        </ResponsiveNavLink>
-                    </div>
-                </div>
-            </div>
-
-            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-100">
-                <header class="bg-white shadow" v-if="$slots.header">
-                    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        <slot name="header" />
-                    </div>
-                </header>
-
-                <div>
-                    <slot />
-                </div>
+            <main class="flex-1 overflow-y-auto bg-[#F8FAFC]">
+                <slot />
             </main>
-            
+
         </div>
     </div>
 </template>
