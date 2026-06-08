@@ -13,7 +13,7 @@ const showingNavigationDropdown = ref(false);
 <template>
     <div class="flex h-screen bg-gray-100">
         
-        <aside class="hidden w-64 flex-col border-r border-gray-200 bg-white sm:flex">
+<aside class="hidden w-64 flex-col border-r border-gray-200 bg-white sm:flex">
             <div class="flex h-16 shrink-0 items-center justify-center border-b border-gray-100 px-4">
                 <Link :href="route('dashboard')">
                     <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
@@ -29,7 +29,38 @@ const showingNavigationDropdown = ref(false);
                     Dashboard
                 </NavLink>
 
-                </nav>
+                <NavLink
+                    :href="route('riwayat')"
+                    :active="route().current('riwayat')"
+                    class="flex w-full items-center rounded-md px-2 py-2"
+                >
+                    Riwayat Transaksi
+                </NavLink>
+            </nav>
+
+            <div class="border-t border-gray-100 p-4 space-y-1">
+                <div class="mb-3 px-2 text-sm font-bold text-gray-800 truncate">
+                    Halo, {{ $page.props.auth.user.name }}
+                </div>
+                
+                <Link
+                    :href="route('profile.edit')"
+                    class="flex w-full items-center rounded-md px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
+                >
+                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                    Profil
+                </Link>
+                
+                <Link
+                    :href="route('logout')"
+                    method="post"
+                    as="button"
+                    class="flex w-full items-center rounded-md px-2 py-2 text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition"
+                >
+                    <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Keluar
+                </Link>
+            </div>
         </aside>
 
         <div class="flex flex-1 flex-col overflow-hidden">
