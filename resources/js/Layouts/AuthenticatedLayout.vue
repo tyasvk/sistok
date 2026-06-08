@@ -13,7 +13,7 @@ const showingNavigationDropdown = ref(false);
 <template>
     <div class="flex h-screen bg-gray-100">
         
-<aside class="hidden w-64 flex-col border-r border-gray-200 bg-white sm:flex">
+        <aside class="hidden w-64 flex-col border-r border-gray-200 bg-white sm:flex">
             <div class="flex h-16 shrink-0 items-center justify-center border-b border-gray-100 px-4">
                 <Link :href="route('dashboard')">
                     <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
@@ -30,12 +30,20 @@ const showingNavigationDropdown = ref(false);
                 </NavLink>
 
                 <NavLink
-    :href="route('riwayat.index')"
-    :active="route().current('riwayat.index')"
-    class="flex w-full items-center rounded-md px-2 py-2"
->
-    Riwayat Transaksi
-</NavLink>
+                    :href="route('riwayat.index')"
+                    :active="route().current('riwayat.index')"
+                    class="flex w-full items-center rounded-md px-2 py-2"
+                >
+                    Riwayat Transaksi
+                </NavLink>
+
+                <NavLink
+                    :href="route('profile.edit')"
+                    :active="route().current('profile.edit')"
+                    class="flex w-full items-center rounded-md px-2 py-2"
+                >
+                    Edit Profil
+                </NavLink>
             </nav>
 
             <div class="border-t border-gray-100 p-4 space-y-1">
@@ -48,7 +56,7 @@ const showingNavigationDropdown = ref(false);
                     class="flex w-full items-center rounded-md px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
                 >
                     <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                    Profil
+                    Edit Profil
                 </Link>
                 
                 <Link
@@ -115,10 +123,10 @@ const showingNavigationDropdown = ref(false);
 
                             <template #content>
                                 <DropdownLink :href="route('profile.edit')">
-                                    Profile
+                                    Edit Profil
                                 </DropdownLink>
                                 <DropdownLink :href="route('logout')" method="post" as="button">
-                                    Log Out
+                                    Keluar
                                 </DropdownLink>
                             </template>
                         </Dropdown>
@@ -137,7 +145,14 @@ const showingNavigationDropdown = ref(false);
                     >
                         Dashboard
                     </ResponsiveNavLink>
-                    </div>
+                    
+                    <ResponsiveNavLink
+                        :href="route('riwayat.index')"
+                        :active="route().current('riwayat.index')"
+                    >
+                        Riwayat Transaksi
+                    </ResponsiveNavLink>
+                </div>
 
                 <div class="border-t border-gray-200 pb-1 pt-4">
                     <div class="px-4">
@@ -150,11 +165,11 @@ const showingNavigationDropdown = ref(false);
                     </div>
 
                     <div class="mt-3 space-y-1">
-                        <ResponsiveNavLink :href="route('profile.edit')">
-                            Profile
+                        <ResponsiveNavLink :href="route('profile.edit')" :active="route().current('profile.edit')">
+                            Edit Profil
                         </ResponsiveNavLink>
                         <ResponsiveNavLink :href="route('logout')" method="post" as="button">
-                            Log Out
+                            Keluar
                         </ResponsiveNavLink>
                     </div>
                 </div>
