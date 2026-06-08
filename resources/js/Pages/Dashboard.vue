@@ -15,6 +15,10 @@ const props = defineProps({
             menipis: 0,
             habis: 0
         })
+    },
+    unverified_count: {
+        type: Number,
+        default: 0
     }
 });
 
@@ -132,6 +136,10 @@ const closeSuccessModal = () => {
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Riwayat Transaksi
                 </Link>
+                <Link v-if="$page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Verifikasi Barang
+    </Link>
             </nav>
             <div class="p-4 border-t border-gray-800">
                 <Link :href="route('logout')" method="post" as="button" class="flex items-center w-full px-4 py-3 text-red-400 hover:bg-red-900/20 rounded-xl">
@@ -142,20 +150,27 @@ const closeSuccessModal = () => {
         </aside>
 
         <div class="flex-1 flex flex-col h-screen overflow-hidden w-full">
-            <header class="h-16 md:h-20 bg-white flex items-center justify-between px-4 md:px-8 border-b border-gray-200 shrink-0">
+<header class="h-16 md:h-20 bg-white flex items-center justify-between px-4 md:px-8 border-b border-gray-200 shrink-0">
                 <div class="flex items-center">
                     <button @click="isSidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
-                    <h2 class="text-lg md:text-2xl font-bold text-gray-800">Ringkasan Stok</h2>
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-800">Dashboard</h2> 
                 </div>
+
                 <div class="flex items-center space-x-3">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900">Admin</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">Lapas Palembang</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">
+                            {{ $page.props.auth.user.is_pimpinan ? 'Pimpinan Lapas' : 'Admin Lapas' }}
+                        </p>
                     </div>
-                    <div class="w-10 h-10 bg-[#0F172A] rounded-full flex items-center justify-center text-white font-bold">A</div>
+                    
+                    <Link :href="route('profile.edit')" class="relative group cursor-pointer" title="Edit Profil">
+                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold group-hover:ring-4 group-hover:ring-blue-100 transition-all">
+                            {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
+                        </div>
+                    </Link>
                 </div>
-            </header>
-
+                </header>
             <main class="flex-1 overflow-y-auto p-4 md:p-8">
                 
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -174,6 +189,36 @@ const closeSuccessModal = () => {
                     <div class="bg-white p-4 md:p-6 rounded-3xl border border-gray-100 shadow-sm">
                         <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase">Habis</p>
                         <p class="text-2xl md:text-4xl font-black text-red-500">{{ stats.habis }}</p>
+                    </div>
+                </div>
+
+                <div v-if="$page.props.auth?.user?.is_pimpinan && unverified_count > 0" 
+                     class="mb-8 bg-red-50 border border-red-100 p-4 md:p-5 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                    
+                    <div class="hidden md:block absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
+
+                    <div class="flex items-start md:items-center">
+                        <div class="flex-shrink-0 bg-red-100 text-red-600 p-2.5 rounded-2xl mt-0.5 md:mt-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <div class="ml-3 md:ml-4">
+                            <h3 class="text-sm md:text-base font-bold text-red-900 tracking-tight">
+                                Verifikasi Tertunda
+                            </h3>
+                            <p class="mt-0.5 text-xs md:text-sm text-red-700 font-medium">
+                                Terdapat <span class="font-extrabold text-red-800">{{ unverified_count }}</span> permintaan barang keluar yang menunggu persetujuan Anda.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-shrink-0 w-full md:w-auto mt-1 md:mt-0">
+                        <Link :href="route('pimpinan.verifikasi')" 
+                              class="flex items-center justify-center w-full md:w-auto px-5 py-3 md:py-2.5 bg-red-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-600 transition-colors focus:ring-4 focus:ring-red-200 outline-none">
+                            Tinjau Permintaan
+                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+                        </Link>
                     </div>
                 </div>
 
@@ -279,7 +324,7 @@ const closeSuccessModal = () => {
         </div>
     </div>
 
-<div v-if="isKeluarModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div v-if="isKeluarModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" @click="isKeluarModalOpen = false"></div>
 
         <div class="relative bg-white w-full md:w-[500px] rounded-3xl shadow-2xl flex flex-col transition-all">

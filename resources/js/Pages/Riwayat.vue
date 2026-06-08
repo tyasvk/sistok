@@ -116,6 +116,11 @@ const formatDate = (dateString) => {
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Riwayat Transaksi
                 </Link>
+
+                <Link v-if="$page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors">
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Verifikasi Barang
+    </Link>
             </nav>
             <div class="p-4 border-t border-gray-800">
                 <Link :href="route('logout')" method="post" as="button" class="flex items-center w-full px-4 py-3 text-red-400 hover:bg-red-900/20 rounded-xl transition-colors">
@@ -127,23 +132,27 @@ const formatDate = (dateString) => {
 
         <div class="flex-1 flex flex-col h-screen w-full print:block print:h-auto">
             
-            <header class="h-16 md:h-20 bg-white flex items-center justify-between px-4 md:px-8 border-b border-gray-200 shrink-0 print:hidden">
+          <header class="h-16 md:h-20 bg-white flex items-center justify-between px-4 md:px-8 border-b border-gray-200 shrink-0">
                 <div class="flex items-center">
-                    <button @click="isSidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600 rounded-lg hover:bg-gray-100">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                    </button>
-                    <h2 class="text-lg md:text-2xl font-bold text-gray-800 ml-2 md:ml-0">Riwayat Transaksi</h2>
+                    <button @click="isSidebarOpen = true" class="md:hidden p-2 -ml-2 text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+                    <h2 class="text-lg md:text-2xl font-bold text-gray-800">Dashboard</h2> 
                 </div>
+
                 <div class="flex items-center space-x-3">
                     <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold text-gray-900">{{ $page.props.auth?.user?.name || 'User' }}</p>
-                        <p class="text-[10px] text-gray-500 font-bold uppercase">{{ $page.props.auth?.user?.is_pimpinan ? 'Pimpinan Lapas' : 'Admin Lapas' }}</p>
+                        <p class="text-sm font-bold text-gray-900">{{ $page.props.auth.user.name }}</p>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase">
+                            {{ $page.props.auth.user.is_pimpinan ? 'Pimpinan Lapas' : 'Admin Lapas' }}
+                        </p>
                     </div>
-                    <div class="w-8 h-8 md:w-10 md:h-10 bg-[#0F172A] rounded-full flex items-center justify-center text-white font-bold text-sm md:text-base shadow-sm">
-                        {{ $page.props.auth?.user?.name ? $page.props.auth.user.name.charAt(0).toUpperCase() : 'U' }}
-                    </div>
+                    
+                    <Link :href="route('profile.edit')" class="relative group cursor-pointer" title="Edit Profil">
+                        <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold group-hover:ring-4 group-hover:ring-blue-100 transition-all">
+                            {{ $page.props.auth.user.name.charAt(0).toUpperCase() }}
+                        </div>
+                    </Link>
                 </div>
-            </header>
+                </header>
 
             <main class="flex-1 overflow-y-auto p-4 md:p-8 print:p-0 print:overflow-visible">
                 

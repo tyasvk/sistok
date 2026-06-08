@@ -9,7 +9,7 @@ use App\Models\Transaction;
 
 class ProductController extends Controller
 {
-    public function index()
+public function index()
     {
         // Mengambil semua data barang
         $products = Product::latest()->get();
@@ -22,10 +22,16 @@ class ProductController extends Controller
             'habis'      => $products->where('stock', '<=', 0)->count(),
         ];
 
+        // [KODE BARU] Menghitung jumlah permintaan barang keluar yang belum diverifikasi
+        $unverifiedCount = Transaction::where('type', 'keluar')
+            ->where('is_verified', false)
+            ->count();
+
         // Kirim data ke Dashboard.vue
         return Inertia::render('Dashboard', [
             'products' => $products,
-            'stats'    => $stats
+            'stats'    => $stats,
+            'unverified_count' => $unverifiedCount, // <-- [KODE BARU] Kirim ke Vue
         ]);
     }
 
