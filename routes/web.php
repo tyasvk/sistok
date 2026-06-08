@@ -1,11 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ProductController; // INI WAJIB DITAMBAHKAN
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\UserController; // Pastikan ini di-import di atas
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -16,56 +16,48 @@ Route::get('/', function () {
     ]);
 });
 
-// Gabungkan semua rute yang butuh login (auth) ke dalam satu grup ini
+// Grup rute untuk semua pengguna yang sudah login
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // Route Dashboard (Menggunakan ProductController)
+    // --- AKSES UMUM (Semua Role Bisa Akses) ---
     Route::get('/dashboard', [ProductController::class, 'index'])->name('dashboard');
 
-    // Route Profile bawaan Breeze
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Tambahkan baris ini untuk Manajemen User
-    Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
+    Route::get('/riwayat', [ProductController::class, 'history'])->name('riwayat.index');
 
-    // Route Halaman Barang Masuk
-    Route::get('/barang-masuk', function () {
-        return Inertia::render('BarangMasuk');
-    })->name('barang-masuk.index');
-
-    // Route Halaman Barang Keluar
+    // HANYA INI YANG BISA DIAKSES USER BIASA TERKAIT STOK
     Route::get('/barang-keluar', function () {
         return Inertia::render('BarangKeluar');
     })->name('barang-keluar.index');
-
-    // Rute untuk menyimpan Barang Baru
-    Route::post('/barang-baru', [ProductController::class, 'store'])->name('barang.store');
-    // Rute untuk menambah stok barang eksisting
-    Route::post('/barang-tambah-stok', [ProductController::class, 'addStock'])->name('barang.tambah-stok');
-
-    // Rute untuk memproses pengurangan stok (Barang Keluar)
     Route::post('/barang-keluar', [ProductController::class, 'removeStock'])->name('barang.keluar');
 
-    Route::get('/riwayat', [ProductController::class, 'history'])->name('riwayat.index');
 
-});
+    // --- AKSES KHUSUS (Hanya Admin ATAU Pimpinan) ---
+    // Menggunakan middleware 'admin' (yang sudah diatur untuk mengizinkan admin & pimpinan)
+    Route::middleware(['admin'])->group(function () {
+        
+        // Manajemen User
+        Route::resource('users', UserController::class)->except(['create', 'show', 'edit']);
 
-// Route khusus Admin
-Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        return 'Selamat datang di Dashboard Admin Sistok!';
-    })->name('admin.dashboard');
-});
+        // Verifikasi Barang
+        Route::get('/verifikasi', [ProductController::class, 'pendingVerification'])->name('pimpinan.verifikasi');
+        Route::patch('/verifikasi/{id}', [ProductController::class, 'approveTransaction'])->name('pimpinan.approve');
+        
+        // --- RUTE BARANG MASUK DIPINDAH KE SINI ---
+        Route::get('/barang-masuk', function () {
+            return Inertia::render('BarangMasuk');
+        })->name('barang-masuk.index');
+        Route::post('/barang-baru', [ProductController::class, 'store'])->name('barang.store');
+        Route::post('/barang-tambah-stok', [ProductController::class, 'addStock'])->name('barang.tambah-stok');
 
-// Route khusus Pimpinan
-Route::middleware(['auth', 'pimpinan'])->group(function () {
-    // Halaman list verifikasi
-    Route::get('/pimpinan/verifikasi', [ProductController::class, 'pendingVerification'])->name('pimpinan.verifikasi');
-    
-    // Aksi tombol "Setujui"
-    Route::patch('/pimpinan/verifikasi/{id}', [ProductController::class, 'approveTransaction'])->name('pimpinan.approve');
+        // --- TAMBAHKAN BARIS INI UNTUK TOMBOL TOLAK ---
+        Route::delete('/verifikasi/{id}', [ProductController::class, 'rejectTransaction'])->name('pimpinan.reject');
+        
+    });
+
 });
 
 require __DIR__.'/auth.php';

@@ -16,13 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
-        // Tambahkan alias ini
+        
+        // PERBAIKAN DI SINI: Tambahkan \App\Http\Middleware\ di depan IsAdmin
         $middleware->alias([
-            'admin' => IsAdmin::class,
-            'pimpinan' => \App\Http\Middleware\IsPimpinan::class, // <-- Tambahkan ini
+            'admin' => \App\Http\Middleware\IsAdmin::class,
+            'pimpinan' => \App\Http\Middleware\IsPimpinan::class,
         ]);
-
-        //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

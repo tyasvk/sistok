@@ -13,6 +13,7 @@ class Transaction extends Model
     protected $fillable = [
         'product_id',
         'type',
+        'user_id',
         'quantity',
         'keterangan',
         'is_verified', // Kolom baru yang kita tambahkan sebelumnya
@@ -21,5 +22,11 @@ class Transaction extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    // TAMBAHKAN RELASI INI
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

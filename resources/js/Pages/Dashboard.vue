@@ -135,7 +135,8 @@ const closeSuccessModal = () => {
                 </div>
             </div>
 
-            <div v-if="$page.props.auth?.user?.is_pimpinan && unverified_count > 0" 
+            <div v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" 
+                 v-show="unverified_count > 0"
                  class="mb-8 bg-red-50 border border-red-100 p-4 md:p-5 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
                 
                 <div class="hidden md:block absolute left-0 top-0 bottom-0 w-1.5 bg-red-500"></div>
@@ -173,10 +174,13 @@ const closeSuccessModal = () => {
                     </div>
                     
                     <div class="flex items-center gap-2 w-full md:w-auto">
-                        <button @click="isModalOpen = true" class="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition">
+                        <button v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" 
+                                @click="isModalOpen = true" 
+                                class="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             Barang Masuk
                         </button>
+                        
                         <button @click="isKeluarModalOpen = true" class="flex-1 md:flex-none flex items-center justify-center px-4 py-2.5 bg-red-500 text-white text-xs md:text-sm font-bold rounded-xl shadow-lg shadow-red-500/20 hover:bg-red-600 transition">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
                             Barang Keluar
@@ -214,7 +218,7 @@ const closeSuccessModal = () => {
             </div>
         </div>
 
-        <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
+        <div v-if="isModalOpen && ($page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan)" class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4">
             <div class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm transition-opacity" @click="isModalOpen = false"></div>
             <div class="relative bg-white w-full md:w-[500px] max-h-[90vh] overflow-y-auto rounded-3xl shadow-2xl flex flex-col transition-all">
                 <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100">
@@ -303,7 +307,7 @@ const closeSuccessModal = () => {
 
                         <div class="pt-1">
                             <label class="flex items-start cursor-pointer bg-red-50/50 p-3.5 border border-red-100 rounded-2xl select-none">
-                                <input type="checkbox" v-model="formKeluar.verifikasi_pimpinan" required class="w-5 h-5 mt-0.5 border-gray-300 rounded text-red-500 focus:ring-red-500">
+                                <input type="checkbox" v-model="formKeluar.verifikasi_pimpinan" class="w-5 h-5 mt-0.5 border-gray-300 rounded text-red-500 focus:ring-red-500">
                                 <span class="ml-3 text-xs text-gray-700 leading-tight">
                                     <strong class="text-red-700 block mb-0.5 font-bold uppercase tracking-wide">Ajukan Verifikasi ke Pimpinan</strong>
                                     Saya mengajukan agar pengeluaran barang ini diverifikasi terlebih dahulu oleh pimpinan/Kasi Lapas.

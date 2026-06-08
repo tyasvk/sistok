@@ -1,5 +1,5 @@
 <script setup>
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
@@ -17,16 +17,6 @@ const props = defineProps({
 // State untuk Filter
 const filterBulan = ref(props.filters?.bulan || '');
 const filterTahun = ref(props.filters?.tahun || new Date().getFullYear());
-
-// State Pop-up Konfirmasi Persetujuan
-const isConfirmModalOpen = ref(false);
-const selectedLog = ref(null);
-const isProcessing = ref(false);
-
-// State Pop-up Sukses
-const isSuccessModalOpen = ref(false);
-const successTitle = ref('Berhasil!');
-const successMessage = ref('');
 
 // Array nama bulan
 const bulanList = [
@@ -49,39 +39,6 @@ const exportPDF = () => {
     window.print();
 };
 
-// Memicu pembukaan Pop-up Konfirmasi
-const approveTransaction = (log) => {
-    selectedLog.value = log;
-    isConfirmModalOpen.value = true;
-};
-
-// Menjalankan aksi persetujuan
-const confirmApprove = () => {
-    if (!selectedLog.value) return;
-    
-    isProcessing.value = true;
-    router.patch(route('pimpinan.approve', selectedLog.value.id), {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            const productName = selectedLog.value.product ? selectedLog.value.product.name : 'Barang Dihapus';
-            const quantity = selectedLog.value.quantity;
-            const unit = selectedLog.value.product?.unit || 'Pcs';
-            
-            isConfirmModalOpen.value = false;
-            isProcessing.value = false;
-            
-            successTitle.value = 'Verifikasi Berhasil!';
-            successMessage.value = `Pengeluaran <strong class="text-gray-900 font-extrabold">${quantity} ${unit}</strong> untuk barang <strong class="text-gray-900 font-extrabold">"${productName}"</strong> telah resmi disetujui pimpinan.`;
-            isSuccessModalOpen.value = true;
-            
-            selectedLog.value = null;
-        },
-        onError: () => {
-            isProcessing.value = false;
-        }
-    });
-};
-
 // Format Tanggal
 const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -94,9 +51,9 @@ const formatDate = (dateString) => {
 
     <AuthenticatedLayout>
         <div class="p-4 md:p-8 print:p-0 print:block">
-            <div class="bg-white rounded-[24px] md:rounded-[32px] border border-gray-100 shadow-sm p-4 md:p-8 print:shadow-none print:border-none print:rounded-none">
+            <div class="bg-transparent md:bg-white md:rounded-[32px] md:border md:border-gray-100 md:shadow-sm md:p-8 print:shadow-none print:border-none print:rounded-none print:bg-white">
                 
-                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 mb-6 md:mb-8 print:hidden">
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 mb-6 md:mb-8 print:hidden bg-white p-5 rounded-[24px] shadow-sm border border-gray-100 md:bg-transparent md:p-0 md:shadow-none md:border-none">
                     <div class="w-full lg:w-auto">
                         <h3 class="text-lg md:text-xl font-bold text-gray-900">Log Data Masuk & Keluar</h3>
                         <p class="text-xs md:text-sm text-gray-500 mt-1">Pilih filter bulan dan tahun untuk melihat rekapan</p>
@@ -122,163 +79,146 @@ const formatDate = (dateString) => {
                     </div>
                 </div>
 
-                <div class="hidden print:block text-center mb-8 border-b-2 border-black pb-4">
-                    <h2 class="text-2xl font-bold uppercase">Laporan Mutasi Barang Gudang</h2>
-                    <p class="text-lg">LAPAS KELAS 1 PALEMBANG</p>
-                    <p class="text-sm mt-1">Bulan: {{ filterBulan ? bulanList.find(b => b.value === filterBulan).text : 'Semua Bulan' }} | Tahun: {{ filterTahun }}</p>
+                <div class="block md:hidden print:hidden">
+                    <div v-if="transactions.length > 0" class="flex flex-col gap-4 pb-10">
+                        <div v-for="log in transactions" :key="'mob-'+log.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
+                            
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5" :class="log.type === 'masuk' ? 'bg-blue-500' : 'bg-red-500'"></div>
+
+                            <div class="flex justify-between items-start mb-3 pl-2">
+                                <div>
+                                    <h3 class="font-black text-gray-900 text-base leading-tight">{{ log.product ? log.product.name : 'Barang Dihapus' }}</h3>
+                                    <p class="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-wider">{{ formatDate(log.created_at) }}</p>
+                                </div>
+                                <div>
+                                    <span v-if="log.type === 'masuk'" class="px-2 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md border border-blue-100">MASUK</span>
+                                    <span v-else class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md border border-red-100">KELUAR</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2 text-sm pl-2 mt-3">
+                                <div class="flex justify-between items-center py-1 border-b border-gray-50">
+                                    <span class="text-gray-500 font-medium">Jumlah</span>
+                                    <span class="font-extrabold text-gray-900">{{ log.quantity }} <span class="text-xs font-normal uppercase text-gray-500">{{ log.product?.unit || '' }}</span></span>
+                                </div>
+                                <div class="flex justify-between items-center py-1 border-b border-gray-50">
+                                    <span class="text-gray-500 font-medium">Pemohon</span>
+                                    <span class="font-bold text-gray-800">{{ log.user?.name || 'Sistem' }}</span>
+                                </div>
+                                <div class="flex justify-between items-start py-1">
+                                    <span class="text-gray-500 font-medium pt-0.5">Tujuan/Ket</span>
+                                    <span class="font-bold text-gray-800 text-right max-w-[60%] leading-tight">{{ log.keterangan || '-' }}</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-t border-gray-100 pl-2">
+                                <div v-if="log.type === 'masuk' || log.is_verified" class="text-center py-2 bg-green-50 text-green-600 text-xs font-bold rounded-lg border border-green-100">
+                                    {{ log.type === 'masuk' ? 'SELESAI' : 'DISETUJUI' }}
+                                </div>
+                                <div v-else>
+                                    <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="flex items-center justify-center w-full py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-xs font-bold transition-colors">
+                                        Tinjau Permintaan
+                                    </Link>
+                                    <div v-else class="text-center py-2 bg-orange-50 text-orange-600 text-xs font-bold rounded-lg border border-orange-100">
+                                        MENUNGGU VERIFIKASI
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                        <p class="text-gray-500 text-sm">Tidak ada riwayat transaksi.</p>
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto rounded-xl border border-gray-50 print:border-none print:overflow-visible">
-                    <table class="w-full text-left print:border-collapse min-w-[700px]">
-                        <thead>
-                            <tr class="text-[10px] md:text-xs font-bold text-gray-400 uppercase border-b border-gray-100 bg-gray-50/50 print:bg-transparent print:text-black print:border-black print:border-b-2">
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Waktu Transaksi</th>
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Nama Barang</th>
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Tipe</th>
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Jumlah</th>
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Tujuan / Keterangan</th>
-                                <th class="py-3 px-4 print:border print:border-black print:p-2">Status / Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs md:text-sm">
-                            <tr v-for="log in transactions" :key="log.id" class="border-b border-gray-50 hover:bg-gray-50 transition-colors print:border-black print:break-inside-avoid">
-                                <td class="py-3 md:py-4 px-4 text-gray-500 print:border print:border-black print:p-2 print:text-black">
-                                    {{ formatDate(log.created_at) }}
-                                </td>
-                                
-                                <td class="py-3 md:py-4 px-4 font-bold text-gray-900 print:border print:border-black print:p-2">
-                                    {{ log.product ? log.product.name : 'Barang Dihapus' }}
-                                </td>
-                                
-                                <td class="py-3 md:py-4 px-4 print:border print:border-black print:p-2">
-                                    <span v-if="log.type === 'masuk'" class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] md:text-xs font-bold rounded-full print:bg-transparent print:text-black print:p-0 print:font-bold border border-blue-100 print:border-none">MASUK</span>
-                                    <span v-else class="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] md:text-xs font-bold rounded-full print:bg-transparent print:text-black print:p-0 print:font-bold border border-red-100 print:border-none">KELUAR</span>
-                                </td>
-                                
-                                <td class="py-3 md:py-4 px-4 font-black text-gray-900 print:border print:border-black print:p-2">
-                                    {{ log.quantity }} <span class="text-[10px] text-gray-400 font-normal uppercase print:hidden">{{ log.product?.unit || '' }}</span>
-                                </td>
-                                
-                                <td class="py-3 md:py-4 px-4 text-gray-600 print:border print:border-black print:p-2">
-                                    {{ log.keterangan || '-' }}
-                                </td>
-                                
-                                <td class="py-3 md:py-4 px-4 print:border print:border-black print:p-2">
-                                    <span v-if="log.is_verified" class="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] md:text-xs font-bold rounded-full print:bg-transparent print:text-black print:p-0 print:font-bold border border-green-100 print:border-none">
-                                        SUDAH DIVERIFIKASI
-                                    </span>
-                                    <div v-else>
-                                        <button 
-                                            v-if="$page.props.auth?.user?.is_pimpinan"
-                                            @click="approveTransaction(log)"
-                                            class="inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-md hover:bg-emerald-700 hover:shadow-lg transition-all print:hidden active:scale-95"
-                                        >
-                                            <svg class="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                            Setujui
-                                        </button>
-                                        <span v-else class="inline-flex items-center px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] md:text-xs font-bold rounded-full print:bg-transparent print:text-black print:p-0 print:font-bold border border-orange-100 print:border-none">
-                                            <span class="w-1.5 h-1.5 mr-1.5 bg-orange-500 rounded-full animate-ping print:hidden"></span>
-                                            MENUNGGU
+                <div class="hidden md:block print:block w-full">
+                    
+                    <div class="hidden print:block text-center mb-8 border-b-2 border-black pb-4">
+                        <h2 class="text-2xl font-bold uppercase">Laporan Mutasi Barang Gudang</h2>
+                        <p class="text-lg">LAPAS KELAS 1 PALEMBANG</p>
+                        <p class="text-sm mt-1">Bulan: {{ filterBulan ? bulanList.find(b => b.value === filterBulan).text : 'Semua Bulan' }} | Tahun: {{ filterTahun }}</p>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-100 overflow-hidden print:border-none print:overflow-visible">
+                        <table class="w-full text-left print:border-collapse">
+                            <thead>
+                                <tr class="text-[11px] lg:text-xs font-bold text-gray-400 uppercase bg-gray-50 print:bg-transparent print:text-black print:border-black print:border-b-2">
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Waktu Transaksi</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Nama Barang</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Tipe</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Jumlah</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Pemohon</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Tujuan / Ket</th>
+                                    <th class="py-3.5 px-4 print:border print:border-black print:p-2">Status / Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm">
+                                <tr v-for="log in transactions" :key="log.id" class="border-t border-gray-100 hover:bg-gray-50 transition-colors print:border-black print:break-inside-avoid">
+                                    <td class="py-4 px-4 text-gray-500 whitespace-nowrap print:border print:border-black print:p-2 print:text-black">
+                                        {{ formatDate(log.created_at) }}
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-gray-900 print:border print:border-black print:p-2">
+                                        {{ log.product ? log.product.name : 'Barang Dihapus' }}
+                                    </td>
+                                    <td class="py-4 px-4 print:border print:border-black print:p-2">
+                                        <span v-if="log.type === 'masuk'" class="px-2.5 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-blue-100 print:border-none">MASUK</span>
+                                        <span v-else class="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-red-100 print:border-none">KELUAR</span>
+                                    </td>
+                                    <td class="py-4 px-4 font-black text-gray-900 whitespace-nowrap print:border print:border-black print:p-2">
+                                        {{ log.quantity }} <span class="text-[10px] text-gray-400 font-normal uppercase print:hidden">{{ log.product?.unit || '' }}</span>
+                                    </td>
+                                    <td class="py-4 px-4 font-bold text-gray-800 print:border print:border-black print:p-2">
+                                        {{ log.user?.name || 'Sistem' }}
+                                    </td>
+                                    <td class="py-4 px-4 text-gray-600 print:border print:border-black print:p-2 max-w-[200px] truncate print:max-w-none print:whitespace-normal" :title="log.keterangan">
+                                        {{ log.keterangan || '-' }}
+                                    </td>
+                                    <td class="py-4 px-4 print:border print:border-black print:p-2">
+                                        <span v-if="log.type === 'masuk' || log.is_verified" class="px-2.5 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-green-100 print:border-none">
+                                            {{ log.type === 'masuk' ? '-' : 'DISETUJUI' }}
                                         </span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-if="transactions.length === 0">
-                                <td colspan="6" class="py-12 text-center text-gray-400 font-medium print:border print:border-black">
-                                    <div class="flex flex-col items-center justify-center space-y-2 print:block">
-                                        <svg class="w-10 h-10 text-gray-300 print:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        <span>Tidak ada riwayat transaksi pada periode ini.</span>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <div class="hidden print:flex justify-end mt-16 text-center">
-                    <div>
-                        <p class="mb-24">Palembang, ........................ 2026</p>
-                        <p class="font-bold underline uppercase">Kepala Lapas</p>
+                                        <div v-else>
+                                            <Link v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan" :href="route('pimpinan.verifikasi')" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-all print:hidden">
+                                                Tinjau <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            </Link>
+                                            <span v-else class="inline-flex items-center px-2.5 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-md print:bg-transparent print:text-black print:p-0 print:font-bold border border-orange-100 print:border-none">
+                                                MENUNGGU
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-if="transactions.length === 0">
+                                    <td colspan="7" class="py-12 text-center text-gray-400 font-medium print:border print:border-black">
+                                        Tidak ada riwayat transaksi pada periode ini.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="hidden print:flex justify-end mt-16 text-center">
+                        <div>
+                            <p class="mb-24">Palembang, ........................ 2026</p>
+                            <p class="font-bold underline uppercase">Kepala Lapas</p>
+                        </div>
                     </div>
                 </div>
 
             </div>
         </div>
-
-        <Transition name="fade-scale">
-            <div v-if="isConfirmModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 print:hidden">
-                <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="isConfirmModalOpen = false"></div>
-                
-                <div class="relative bg-white w-full max-w-md rounded-[28px] md:rounded-[32px] p-6 md:p-8 text-center shadow-2xl transition-all duration-300 transform">
-                    <div class="mx-auto w-16 h-16 md:w-20 md:h-20 bg-amber-50 rounded-full flex items-center justify-center mb-5 md:mb-6 border-4 border-amber-100 shadow-inner">
-                        <svg class="w-8 h-8 md:w-10 md:h-10 text-amber-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-
-                    <h4 class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">Konfirmasi Verifikasi</h4>
-                    <p class="text-gray-500 mt-2 md:mt-3 mb-6 md:mb-8 leading-relaxed text-sm md:text-base">
-                        Apakah Anda yakin ingin menyetujui pengeluaran 
-                        <strong class="text-gray-900 font-extrabold">{{ selectedLog?.quantity }}</strong> item untuk 
-                        <strong class="text-gray-900 font-extrabold">"{{ selectedLog?.product ? selectedLog.product.name : 'Barang Dihapus' }}"</strong>?
-                    </p>
-
-                    <div class="flex gap-2.5 md:gap-3">
-                        <button @click="isConfirmModalOpen = false" class="flex-1 py-3 md:py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl md:rounded-2xl font-bold text-sm transition-colors outline-none">
-                            Batal
-                        </button>
-                        <button @click="confirmApprove" :disabled="isProcessing" class="flex-1 py-3 md:py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl md:rounded-2xl font-bold text-sm shadow-lg shadow-emerald-600/20 transition-colors outline-none flex items-center justify-center">
-                            <svg v-if="isProcessing" class="animate-spin h-4 w-4 text-white mr-2" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            {{ isProcessing ? 'Memproses...' : 'Ya, Setujui' }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Transition>
-
-        <Transition name="fade-scale">
-            <div v-if="isSuccessModalOpen" class="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 print:hidden">
-                <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="isSuccessModalOpen = false"></div>
-                
-                <div class="relative bg-white w-full max-w-sm rounded-[28px] md:rounded-[32px] p-6 md:p-8 text-center shadow-2xl transition-all duration-300 transform">
-                    <div class="mx-auto w-20 h-20 md:w-24 md:h-24 bg-green-50 rounded-full flex items-center justify-center mb-5 md:mb-6 border-4 border-green-100 shadow-inner">
-                        <svg class="w-10 h-10 md:w-12 md:h-12 text-green-500 animate-pulse-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                    </div>
-
-                    <h4 class="text-xl md:text-2xl font-black text-gray-900 tracking-tight">{{ successTitle }}</h4>
-                    <p class="text-gray-500 mt-2 md:mt-2.5 mb-6 md:mb-8 leading-relaxed text-sm md:text-base" v-html="successMessage"></p>
-
-                    <button @click="isSuccessModalOpen = false" class="w-full py-3.5 md:py-4 bg-blue-600 text-white rounded-xl md:rounded-2xl font-bold text-sm md:text-base shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-colors focus:ring-4 focus:ring-blue-300 outline-none">
-                        Selesai
-                    </button>
-                </div>
-            </div>
-        </Transition>
     </AuthenticatedLayout>
 </template>
 
 <style scoped>
-.fade-scale-enter-active,
-.fade-scale-leave-active { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.fade-scale-enter-from,
-.fade-scale-leave-to { opacity: 0; transform: scale(0.9) translateY(10px); }
-@keyframes pulse-slow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } }
-.animate-pulse-slow { animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-
 @media print {
-    @page { margin: 1cm; size: A4 portrait; }
+    @page { margin: 1cm; size: A4 landscape; }
     body { 
         -webkit-print-color-adjust: exact; 
         print-color-adjust: exact; 
         background-color: white !important;
     }
     
-    /* These styles might need adjusting depending on how your AuthenticatedLayout handles overflow */
     :deep(.flex-1.overflow-y-auto) {
         overflow: visible !important;
         height: auto !important;

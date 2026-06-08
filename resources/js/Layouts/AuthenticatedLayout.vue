@@ -11,6 +11,7 @@ const pageTitle = computed(() => {
     if (route().current('dashboard')) return 'Pantau Stok';
     if (route().current('riwayat.index')) return 'Riwayat Transaksi';
     if (route().current('pimpinan.verifikasi')) return 'Verifikasi Barang';
+    if (route().current('users.*')) return 'Manajemen User';
     if (route().current('profile.edit')) return 'Edit Profil';
     return 'Dashboard';
 });
@@ -48,7 +49,17 @@ const pageTitle = computed(() => {
                     Riwayat Transaksi
                 </Link>
 
-<Link 
+                <Link 
+                    v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan"
+                    :href="route('pimpinan.verifikasi')" 
+                    :class="route().current('pimpinan.verifikasi') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
+                    class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors"
+                >
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Verifikasi Barang
+                </Link>
+
+                <Link 
                     v-if="$page.props.auth?.user?.is_admin || $page.props.auth?.user?.is_pimpinan"
                     :href="route('users.index')" 
                     :class="route().current('users.*') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'text-gray-400 hover:text-white hover:bg-gray-800'"
@@ -89,8 +100,11 @@ const pageTitle = computed(() => {
                 <div class="flex items-center space-x-3">
                     <div class="text-right hidden sm:block">
                         <p class="text-sm font-bold text-gray-900">{{ $page.props.auth.user.name }}</p>
+                        
                         <p class="text-[10px] text-gray-500 font-bold uppercase">
-                            {{ $page.props.auth.user.is_pimpinan ? 'Pimpinan Lapas' : 'Admin Lapas' }}
+                            <span v-if="$page.props.auth.user.is_pimpinan">Pimpinan Lapas</span>
+                            <span v-else-if="$page.props.auth.user.is_admin">Admin Lapas</span>
+                            <span v-else>Petugas Lapas</span>
                         </p>
                     </div>
                     
