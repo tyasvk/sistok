@@ -30,12 +30,12 @@ const showingNavigationDropdown = ref(false);
                 </NavLink>
 
                 <NavLink
-                    :href="route('riwayat')"
-                    :active="route().current('riwayat')"
-                    class="flex w-full items-center rounded-md px-2 py-2"
-                >
-                    Riwayat Transaksi
-                </NavLink>
+    :href="route('riwayat.index')"
+    :active="route().current('riwayat.index')"
+    class="flex w-full items-center rounded-md px-2 py-2"
+>
+    Riwayat Transaksi
+</NavLink>
             </nav>
 
             <div class="border-t border-gray-100 p-4 space-y-1">

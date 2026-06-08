@@ -63,7 +63,13 @@ class ProductController extends Controller
         $product = Product::findOrFail($request->product_id);
         $product->increment('stock', $request->jumlah);
 
-        Transaction::create(['product_id' => $product->id, 'type' => 'masuk', 'quantity' => $request->jumlah, 'keterangan' => 'Tambah Stok']);
+        Transaction::create([
+            'product_id' => $product->id, 
+            'type' => 'masuk', 
+            'quantity' => $request->jumlah, 
+            'is_verified' => true, // <-- Barang masuk otomatis terverifikasi
+            'keterangan' => 'Tambah Stok'
+        ]);
 
         // 3. Kembali ke dashboard dengan data terbaru
         return redirect()->back();
@@ -95,7 +101,13 @@ class ProductController extends Controller
 
         // Keterangan: Di masa mendatang, Anda bisa menyimpan data $request->tujuan 
         // dan nama pimpinan ke dalam tabel log_transaksi di sini.
-        Transaction::create(['product_id' => $product->id, 'type' => 'keluar', 'quantity' => $request->jumlah, 'keterangan' => $request->tujuan]);
+        Transaction::create([
+            'product_id' => $product->id, 
+            'type' => 'keluar', 
+            'quantity' => $request->jumlah, 
+            'keterangan' => $request->tujuan,
+            'is_verified' => false // <-- Barang keluar belum terverifikasi
+        ]);
 
         return redirect()->back();
     }
@@ -117,5 +129,29 @@ class ProductController extends Controller
             'transactions' => $query->get(),
             'filters'      => $request->only(['bulan', 'tahun'])
         ]);
+    }
+
+    // Menampilkan halaman daftar barang yang butuh verifikasi
+    public function pendingVerification()
+    {
+        // Ambil transaksi keluar yang belum diverifikasi
+        $transactions = Transaction::with('product')
+            ->where('type', 'keluar')
+            ->where('is_verified', false)
+            ->latest()
+            ->get();
+
+        return Inertia::render('Pimpinan/Verifikasi', [
+            'transactions' => $transactions
+        ]);
+    }
+
+    // Memproses persetujuan verifikasi
+    public function approveTransaction($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->update(['is_verified' => true]);
+
+        return redirect()->back();
     }
 }

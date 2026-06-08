@@ -55,4 +55,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
     })->name('admin.dashboard');
 });
 
+// Route khusus Pimpinan
+Route::middleware(['auth', 'pimpinan'])->group(function () {
+    // Halaman list verifikasi
+    Route::get('/pimpinan/verifikasi', [ProductController::class, 'pendingVerification'])->name('pimpinan.verifikasi');
+    
+    // Aksi tombol "Setujui"
+    Route::patch('/pimpinan/verifikasi/{id}', [ProductController::class, 'approveTransaction'])->name('pimpinan.approve');
+});
+
 require __DIR__.'/auth.php';

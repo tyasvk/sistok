@@ -17,6 +17,8 @@ public function up(): void
         $table->enum('type', ['masuk', 'keluar']);
         $table->integer('quantity');
         $table->string('keterangan')->nullable(); // Menyimpan Tujuan atau Sumber
+        // TAMBAHKAN BARIS INI
+        $table->boolean('is_verified')->default(false);
         $table->timestamps();
     });
 }

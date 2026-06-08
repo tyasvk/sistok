@@ -2,14 +2,24 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $fillable = ['product_id', 'type', 'quantity', 'keterangan'];
+    use HasFactory;
 
-    // Relasi ke tabel Product
-    public function product() {
+    // PASTIKAN SEMUA KOLOM INI ADA DI DALAM $fillable
+    protected $fillable = [
+        'product_id',
+        'type',
+        'quantity',
+        'keterangan',
+        'is_verified', // Kolom baru yang kita tambahkan sebelumnya
+    ];
+
+    public function product()
+    {
         return $this->belongsTo(Product::class);
     }
 }

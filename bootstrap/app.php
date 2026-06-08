@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Tambahkan alias ini
         $middleware->alias([
             'admin' => IsAdmin::class,
+            'pimpinan' => \App\Http\Middleware\IsPimpinan::class, // <-- Tambahkan ini
         ]);
 
         //
